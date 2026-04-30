@@ -1,0 +1,63 @@
+---
+name: architecture-alignment
+description: 신규 코드 / 리팩토링 작업 시 Nudge-Signal Backend 의 레이어드 아키텍처와 DDD 원칙에 맞는지 점검한다. Task 로 명시적으로 호출해서 사용한다 (자동 트리거 없음).
+---
+
+# Architecture Alignment
+
+새 파일을 만들거나 리팩토링할 때 프로젝트 아키텍처 원칙에 맞는지 점검한다.
+
+## 패키지 구조 (현재)
+
+현재 프로젝트는 **레이어 우선** 패키징을 따른다:
+
+    com.nudgesignal.backend
+    ├── api/        # REST 컨트롤러 (HTTP 요청/응답 파싱만)
+    ├── service/    # 비즈니스 로직
+    ├── domain/     # JPA 엔티티 + 리포지토리 (Aggregate)
+    ├── infra/      # 외부 연동 (Redis, 외부 API, 메일러 등)
+    └── config/     # Spring 설정 클래스
+
+도메인 규모가 커지면 각 레이어 안에서 도메인 별 하위 패키지로 한 번 더 나눈다 (예: `service/match/`, `domain/match/`). **도메인-우선 패키징** 으로의 전환은 별도 결정 사항이며 현재 컨벤션이 아니다.
+
+## 점검 체크리스트
+
+새 코드를 추가하거나 옮길 때 다음을 본다.
+
+1. **도메인 식별** — 이 로직이 속하는 도메인(예: `auth`, `match`, `profile`, `message`) 이 무엇인가? 기존 도메인이면 해당 하위 패키지에, 새 도메인이면 하위 패키지 분할을 검토.
+2. **레이어 책임 분리**
+   - `api` (Controller): HTTP 입출력만. 비즈니스 결정 / 트랜잭션 / DB 접근 금지. DTO ↔ 서비스 시그니처 변환만.
+   - `service`: 비즈니스 로직, 트랜잭션 경계 (`@Transactional`), 도메인 객체 협력. HTTP / Spring MVC 의존 금지.
+   - `domain`: JPA 엔티티 + 리포지토리. Aggregate Root 단위로 묶고 `@Data` / `@Setter` 금지.
+   - `infra`: 외부 시스템과의 어댑터 (Redis, 외부 HTTP, 메일러, 메시지 큐 등). 서비스 레이어가 인터페이스를 통해 사용.
+   - `config`: `@Configuration`, `@ConfigurationProperties`, 빈 정의.
+   - DTO: 컨트롤러 입출력 / 서비스 경계 객체. **엔티티를 외부로 노출 금지.**
+3. **의존 방향**
+   - `api` → `service` → `domain` (단방향)
+   - `service` → `infra` (인터페이스 경유)
+   - `domain` 은 다른 레이어에 의존하지 않는다.
+   - 도메인끼리의 직접 결합 지양. 공유가 필요하면 `infra` 어댑터 또는 도메인 이벤트로.
+4. **테스트 가능성**
+   - 컨트롤러는 `@WebMvcTest` 가능해야 한다 (서비스를 mock 으로 주입할 수 있는 형태).
+   - 서비스는 의존을 인터페이스로 받아 단위 테스트 가능해야 한다.
+   - 엔티티는 JPA 없이도 객체로 테스트 가능한 메서드를 둘 수 있어야 한다.
+
+## 안티 패턴 (즉시 잡는다)
+
+- 컨트롤러에서 `@Transactional` / `EntityManager` / 리포지토리 직접 사용
+- 컨트롤러가 엔티티를 직접 반환 (DTO 강제)
+- 서비스가 `HttpServletRequest` / `Model` / `RedirectView` 등 MVC 객체에 의존
+- 도메인 패키지에 외부 시스템 의존 (Redis 클라이언트 / HTTP 클라이언트 등)
+- `@Setter` / `@Data` 가 붙은 JPA 엔티티
+- 서비스 메서드가 트랜잭션 경계 없이 여러 리포지토리 쓰기를 호출
+
+## 참고
+
+- 최신 컨벤션의 진실 공급원: `CLAUDE.md` 의 "디렉터리 구조" 섹션 + `.claude/Rule.md` 의 "코딩 컨벤션".
+- 구조 변경(예: 도메인-우선 패키징 전환) 은 이 문서 / `CLAUDE.md` 동시 갱신 후 반영.
+
+## 사용
+
+`Task` 로 명시적 호출. 예:
+- "이 새 클래스가 아키텍처 규칙에 맞는지 봐줘"
+- "이 리팩토링 PR 의 레이어 구분이 맞나 점검"

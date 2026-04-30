@@ -1,0 +1,114 @@
+---
+name: create-pr
+description: Nudge-Signal Backend 의 Conventional Commits 규칙과 PR 템플릿에 맞춰 gh CLI 로 Pull Request 를 생성합니다. PR 생성, gh pr create, 이슈 해결 후 PR 단계에서 사용합니다.
+---
+
+# GitHub PR 생성 Skill
+
+Nudge-Signal Backend 의 컨벤션에 맞는 형식으로 PR 을 생성합니다.
+
+## 언제 사용하나요?
+
+- PR 을 생성할 때
+- `gh pr create` 명령을 사용할 때
+- 이슈 해결 플로우의 마지막 단계
+
+## PR 제목 규칙
+
+### 형식
+
+    <type>: <설명>
+
+**허용 type**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`
+
+**예시:**
+- `feat: 매칭 카드 좋아요 토글 API`
+- `fix: 프로필 이미지 업로드 검증 누락 수정`
+- `refactor: AuthService 인터페이스 분리`
+- `docs: README 환경변수 표 갱신`
+
+### 금지
+
+- 제목에 이모지/깃모지 사용 금지 — 프로젝트 컨벤션은 이모지 없는 Conventional Commits.
+- 제목에 Claude/Codex/AI 언급 금지.
+- 제목에 이슈번호 prefix 금지 (이슈 연결은 본문 `Closes #N`).
+
+## PR 본문 형식
+
+```markdown
+## 개요
+
+<!-- 이 PR 이 무엇을 바꾸는지 1~3줄 요약 -->
+
+## 변경 사항
+
+### Added
+- `src/main/java/.../FooController.java`: ...
+
+### Modified
+- `src/main/java/.../BarService.java`: ...
+
+### Deleted
+- `src/main/java/.../LegacyFoo.java`: ...
+
+## 테스트
+
+- [ ] `./gradlew clean build` 통과
+- [ ] 단위 테스트 추가/수정
+- [ ] 수동 확인 (필요시): ...
+
+## 관련 이슈
+
+- Closes #{이슈번호}
+
+## 기타 / 검토 요청
+
+<!-- 리뷰어가 특히 봐주었으면 하는 부분, 배포 주의사항 등 -->
+```
+
+## PR 생성 명령어 (예시)
+
+```bash
+gh pr create \
+  --base main \
+  --title "feat: 매칭 카드 좋아요 토글 API" \
+  --body "$(cat <<'EOF'
+## 개요
+
+매칭 카드에 좋아요 토글 엔드포인트를 추가합니다. 기존 GET 만 있던 매칭 API 에 POST /matches/{id}/like 가 더해집니다.
+
+## 변경 사항
+
+### Modified
+- `src/main/java/com/nudgesignal/backend/api/MatchController.java`: 토글 핸들러 추가
+- `src/main/java/com/nudgesignal/backend/service/MatchService.java`: 좋아요 상태 저장/해제
+- `src/main/java/com/nudgesignal/backend/domain/Match.java`: liked 필드
+
+## 테스트
+
+- [x] `./gradlew clean build` 통과
+- [x] `MatchServiceTest` 정상 / 중복 토글 / 잘못된 ID 케이스 추가
+- [ ] 수동 확인: POST /api/matches/{id}/like 호출 후 Postgres 상태 확인
+
+## 관련 이슈
+
+- Closes #42
+EOF
+)"
+```
+
+## 생성 전 체크리스트
+
+- [ ] 브랜치가 `main` 이 아님 (feature 브랜치)
+- [ ] origin/main 과 동기화됨 (`git log --oneline HEAD..origin/main` 비어 있음)
+- [ ] `./gradlew clean build` 통과
+- [ ] 커밋 메시지에 Claude/Codex/AI 언급 없음
+- [ ] PR 본문에 Claude/Codex/AI 언급 없음 (`Co-Authored-By` 포함)
+- [ ] 연관 이슈가 있다면 `Closes #N` 포함
+- [ ] 한 커밋에 여러 의도가 섞이지 않음 (리팩토링 + 기능 추가 혼합 금지)
+
+## 생성 후
+
+- PR URL 출력
+- 필요시 리뷰어 지정: `gh pr edit {번호} --add-reviewer <user>`
+- CI 상태 확인: `gh pr checks {번호}`
