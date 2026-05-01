@@ -35,12 +35,100 @@
 
 ## 4. 코딩 컨벤션
 
+### 4.1 패키지·레이어
+
 - 패키지: `com.nudgesignal.backend.*`. 레이어: `api` (controller) / `service` / `domain` (entity, repository) / `infra` (외부 연동) / `config`.
 - Lombok 사용 OK (`@Getter`, `@RequiredArgsConstructor`, `@Slf4j`). **`@Data` / `@Setter` 는 엔티티에 쓰지 말 것** (불변성 파괴).
 - JPA 엔티티 기본 생성자는 `protected`. 필드 직접 노출 금지.
 - 컨트롤러는 DTO 반환. 엔티티 직접 노출 금지.
-- 트랜잭션 경계는 서비스 레이어 (`@Transactional`).
+- 트랜잭션 경계는 서비스 레이어 (`@Transactional`). 조회 전용 메서드는 `@Transactional(readOnly = true)` 명시.
 - `open-in-view: false`. 컨트롤러/뷰에서 lazy loading 금지.
+
+### 4.2 객체 생성과 소멸
+
+- 의미 있는 이름이 있을 때 정적 팩토리 메서드 우선 (`User.of(...)`, `EmailAddress.from(...)`, `UserResponse.from(user)`). public 생성자는 의도가 단순 매핑일 때만.
+- 매개변수가 4개 이상이거나 선택값이 섞이면 빌더(`@Builder`) 또는 별도 객체로 묶는다. 텔레스코핑 생성자 금지.
+- 싱글톤이 필요하면 enum 또는 private 생성자 + 정적 인스턴스. 스프링 빈은 기본이 싱글톤이므로 별도 패턴 불필요.
+- 유틸 클래스(정적 메서드만 가진 클래스) 는 private 생성자로 인스턴스화 차단.
+- 불필요한 객체 생성 금지: `new String("...")`, 박싱된 정수 캐싱 우회, 반복문 안 정규식 컴파일 등.
+- 자원 해제는 `try-with-resources`. `try-finally` 로 close 호출 금지.
+- `finalize()` / `Cleaner` 사용 금지. 자원은 명시적으로 close 하거나 `AutoCloseable` 로 감싼다.
+
+### 4.3 모든 객체의 공통 메서드
+
+- `equals` 를 재정의하면 `hashCode` 도 함께 재정의. JPA 엔티티는 **식별자 기반**으로 (자동 생성 ID 가 채워진 후에만 의미). Lombok `@EqualsAndHashCode(of = "id")` 명시적 지정.
+- `toString` 은 디버깅·로그용으로 가급적 재정의. 단, 비밀번호·토큰·이메일 등 민감 정보 / 양방향 연관관계 필드는 제외.
+- `Comparable` 은 자연 순서가 명확할 때만 구현. 그 외는 `Comparator` 를 별도 제공.
+- `clone()` 사용 금지. 복사가 필요하면 복사 생성자 또는 정적 팩토리.
+
+### 4.4 클래스와 인터페이스
+
+- 접근 수준 최소화. 기본은 `private`, 필요한 만큼만 열어준다 (`package-private` → `protected` → `public`).
+- 가변성 최소화. 도메인 객체·값 객체·DTO 는 불변 선호 (`final` 필드, setter 없음). 상태 변경은 도메인 메서드로 (`user.changeNickname(...)`).
+- 상속보다 컴포지션. 프레임워크가 강제하지 않는 한 `extends` 대신 협력 객체 주입.
+- 상속용으로 설계되지 않은 클래스는 `final` 또는 package-private. 상속을 의도했다면 protected 훅 메서드와 자기 호출 규약을 문서화.
+- 의존성은 구현 클래스가 아니라 인터페이스 타입으로 받는다 (`List`, `Map`, 도메인 추상화 등).
+- public 클래스의 가변 필드는 노출 금지. 접근자(getter) 사용.
+- 한 파일에는 한 개의 top-level 클래스만.
+
+### 4.5 제네릭
+
+- raw 타입 금지 (`List` 대신 `List<User>`).
+- 비검사 경고는 가능한 한 제거. 남겨야 한다면 가장 좁은 범위에 `@SuppressWarnings("unchecked")` + 사유 주석.
+- 배열보다 리스트. 제네릭 배열 생성 금지.
+- API 유연성을 위해 한정 와일드카드 활용 (PECS — producer `extends`, consumer `super`).
+
+### 4.6 열거 타입과 애노테이션
+
+- 정수·문자열 상수 묶음 대신 `enum`. (예: 매칭 상태, 알림 종류)
+- `ordinal()` 에 의존 금지. 순서가 의미 있다면 enum 필드로 명시.
+- 비트 필드 / 정수 키 맵 대신 `EnumSet` / `EnumMap`.
+- 명명 패턴 / 문자열 키 대신 애노테이션으로 메타데이터 표현.
+
+### 4.7 람다와 스트림
+
+- 익명 내부 클래스 대신 람다. 람다는 3줄 이내로 짧게 — 길어지면 메서드로 추출.
+- 표준 함수형 인터페이스 우선 (`Function`, `Predicate`, `Consumer`, `Supplier`, `BiFunction`, ...). 같은 시그니처를 새로 정의하지 않는다.
+- 메서드 참조가 더 읽기 좋다면 람다 대신 사용 (`users.stream().map(User::getId)`).
+- 스트림은 가독성에 도움될 때만. 복잡한 분기 / 누적 / side effect 가 끼면 for 문이 낫다.
+- 스트림 파이프라인 안에서 외부 상태 변경 / I/O 등 부수효과 금지. `forEach` 는 결과 수집이 아니라 종료 액션 용도.
+
+### 4.8 메서드
+
+- 매개변수 유효성을 메서드 진입 직후 검증. 컨트롤러 진입은 Bean Validation (`@Valid`, `@NotNull`, ...), 도메인 / 서비스는 `Objects.requireNonNull`, `Assert.isTrue` 등 명시적 가드.
+- 가변 객체를 외부로부터 받거나 외부로 내보낼 때는 방어적 복사 또는 불변 뷰 (`List.copyOf`, `Collections.unmodifiableList`).
+- `null` 대신 빈 컬렉션 / `Optional` 반환. 컬렉션 반환 메서드는 절대 `null` 을 돌려주지 않는다.
+- `Optional` 은 **반환 타입 전용**. 필드 / 매개변수 / 컬렉션 요소로 사용 금지.
+- 매개변수가 4개를 넘기면 객체(파라미터 객체 / Command / Query) 로 묶는다.
+- boolean 매개변수 연속 금지 (호출부에서 의미가 사라진다). enum / 객체로 표현.
+
+### 4.9 일반 프로그래밍
+
+- 지역 변수의 범위는 최초 사용 직전까지 좁힌다. 선언과 초기화는 함께.
+- 인덱스가 필요 없다면 for-each 우선.
+- 표준 라이브러리 우선 — 직접 구현 전에 JDK / Spring / Apache Commons 에 같은 기능이 있는지 확인.
+- 정확한 계산은 `BigDecimal` 또는 정수형. 금액 / 점수 / 매칭 비율 등에 `float` / `double` 금지.
+- 박싱 타입(`Integer`, `Long`, ...) 보다 기본형. 컬렉션 / 제네릭이 아니면 박싱하지 않는다. `==` 로 박싱 비교 금지.
+- 문자열로 만물을 표현하지 않는다. 상태 / 종류 / 식별자는 enum 또는 도메인 VO.
+- 반복적인 문자열 연결은 `StringBuilder` / `String.join` / `Stream#collect`.
+- 객체는 가능한 한 인터페이스 타입으로 참조 (`List<User> users = new ArrayList<>();`).
+
+### 4.10 예외
+
+- 예외는 예외 상황에만. 정상 흐름 / 분기 제어에 throw–catch 사용 금지.
+- 도메인 예외 / 비즈니스 예외는 `RuntimeException` 계열로 통일 (checked 예외로 호출자에게 강제 부담 주지 않는다).
+- 표준 예외 우선 (`IllegalArgumentException`, `IllegalStateException`, `NoSuchElementException`). 같은 의미를 새로 만들지 않는다.
+- 추상화 수준에 맞는 예외를 던진다. 인프라 예외(JDBC / IO) 를 컨트롤러 응답으로 그대로 흘리지 않고, 서비스 / `@RestControllerAdvice` 에서 도메인·응답 예외로 변환.
+- 던지는 예외는 javadoc 또는 메서드 시그니처에 드러낸다.
+- 예외를 무시하지 않는다. 빈 `catch` 금지. 의도적으로 무시한다면 사유를 한 줄 주석 + 변수명 `ignored`.
+
+### 4.11 동시성
+
+- 공유 가변 상태는 동기화하거나 처음부터 불변으로 만든다. 가능한 한 후자.
+- `Thread` 직접 생성 금지. `Executor` / `TaskExecutor` / Spring `@Async` 사용.
+- 저수준 `wait` / `notify` 대신 `CompletableFuture`, `BlockingQueue`, `ConcurrentHashMap` 등 동시성 유틸.
+- 락 범위 최소화. 락 안에서 외부 메서드 / 알 수 없는 콜백 호출 금지 (데드락 / 라이브락 위험).
+- 시간 / 만료가 의미 있는 곳에는 `Instant` / `Duration` 사용. `System.currentTimeMillis()` 직접 사용 자제.
 
 ## 5. 코드 품질
 
