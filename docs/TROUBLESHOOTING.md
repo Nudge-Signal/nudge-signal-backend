@@ -24,7 +24,7 @@
 - 정상 빌드 / 정상 테스트 통과
 - PR 머지, CI 통과 등 운영 잡무
 
-자동 기록 도우미: `.claude/agents/troubleshooting-recorder.md` (Task 로 호출).
+자동 기록 도우미: `.codex/agents/troubleshooting-recorder.toml` (Task 로 호출).
 
 ---
 
@@ -36,4 +36,3 @@
 - 원인: `application.yml` 이 보안 규칙 §3 에 따라 `spring.profiles.active: ${SPRING_PROFILES_ACTIVE}` / `server.port: ${SERVER_PORT}` 를 **fallback 없이** 참조한다. 일반 실행은 환경변수 / GitHub Actions secrets 로 채우지만, `@WebMvcTest` 는 외부 env 를 자동 주입하지 않으므로 placeholder 가 그대로 남아 `ProfilesValidator` 가 거부.
 - 해결: 테스트 클래스에 `@TestPropertySource(properties = {"SPRING_PROFILES_ACTIVE=test", "SERVER_PORT=0"})` 추가. `NudgeSignalBackendApplicationTests` 가 이미 같은 패턴을 쓰고 있어 동일하게 맞춤.
 - 학습/메모: 보안 규칙(§3) 으로 yml 디폴트 금지 → 슬라이스 테스트 추가 시 매번 env 주입 필요. 컨트롤러 / 서비스 슬라이스가 늘어나면 공통 기반 클래스 또는 `@TestPropertySource` 를 모은 메타애노테이션 도입 검토. 통합 테스트(`@SpringBootTest`) 도 동일 문제 — 같은 기준으로 처리.
-
