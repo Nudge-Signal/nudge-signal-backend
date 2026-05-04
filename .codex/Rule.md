@@ -9,6 +9,7 @@
 - **feature 브랜치에서 작업.** 브랜치 명: `feat/<scope>`, `fix/<scope>`, `chore/<scope>`. **main 에 직접 커밋·푸시 금지.** 변경은 항상 PR.
 - **머지 전 `./gradlew clean build` 그린 확인.**
 - **작업 완료 시 문서 동기화.** 변경이 영향을 주는 문서(`README.md`, `AGENTS.md`, `.codex/Rule.md`, `.codex/Skill.md`, `docs/TROUBLESHOOTING.md` 등)를 같은 PR 에 함께 업데이트.
+- **리뷰 요청 시 `.codex/Review.md` 기준을 따른다.** findings 우선, 심각도 순 정렬, 파일/라인 근거, 테스트 공백 명시가 기본이다.
 - **에러·트레이드오프·성능 개선은 즉시 `docs/TROUBLESHOOTING.md` 에 기록.** 형식은 `.codex/Skill.md` 의 "트러블슈팅 기록" 섹션 참조.
 
 ## 2. Git

@@ -35,6 +35,13 @@
 4. push 후 PR 생성. 본문은 한국어, 형식은 `.codex/agents/create-pr.toml` 의 템플릿 참고.
 5. 직접 호출이 필요하면 `create-pr` 에이전트 사용.
 
+## 리뷰 루틴
+
+1. Plan Mode 로 리뷰 범위와 확인 순서를 먼저 잡는다.
+2. 리뷰 대상이 PR 이면 `gh pr view` / `gh pr diff` 로 base, head, 변경 파일, CI 상태를 확인한다. 로컬 변경이면 `git diff` / `git diff --cached` 를 확인한다.
+3. `.codex/Review.md` 의 우선순위와 체크리스트에 따라 버그, 회귀 위험, 보안, 테스트 누락을 먼저 찾는다.
+4. 결과는 findings 우선으로 작성한다. 문제가 없으면 "발견한 문제 없음"과 남은 테스트 공백만 짧게 남긴다.
+
 ## 트러블슈팅 기록
 
 에러·의식적 트레이드오프·성능 개선을 만나면 즉시 `docs/TROUBLESHOOTING.md` **하단**에 항목 추가:
