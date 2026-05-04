@@ -118,6 +118,7 @@ docker run --rm -p 8080:8080 \
 - `AGENTS.md`: Codex 가 우선 읽는 프로젝트 가이드
 - `.codex/Rule.md`: 필수 규칙 (워크플로 / Git / 보안 / 컨벤션 / 코드 품질)
 - `.codex/Skill.md`: 자주 쓰는 작업 절차
+- `.codex/Review.md`: 코드 리뷰 기준, 우선순위, findings 출력 형식
 - `.codex/agents/*.toml`: PR 생성, 아키텍처 점검, 트러블슈팅 기록용 에이전트 정의
 - `docs/TROUBLESHOOTING.md`: 에러·트레이드오프·성능 개선 이력
 
