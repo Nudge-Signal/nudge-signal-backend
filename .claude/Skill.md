@@ -12,7 +12,7 @@
    결과가 비어 있지 않으면:
    - 새 작업: `git switch main && git pull --ff-only` 후 새 브랜치 분기
    - 진행 중 브랜치: `git rebase origin/main`
-2. **플랜 모드 진입**: `EnterPlanMode` 툴 호출 → 계획 작성 → `ExitPlanMode` 로 승인 받기. 툴이 deferred 라면 `ToolSearch` 로 먼저 로드.
+2. **플랜 모드 진입**: 어떠한 작업이든 시작 전 반드시 Plan Mode 로 계획을 세운다. 단순 문서 수정, 한 줄 변경, 질문성 조사도 예외 없이 Plan Mode 를 먼저 사용한다.
 3. feature 브랜치에서 구현 시작 (`feat/<scope>` 등).
 
 ## 검증 루틴

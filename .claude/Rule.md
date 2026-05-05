@@ -5,7 +5,7 @@
 ## 1. 워크플로
 
 - **(2인 팀) 작업 시작 전 main 동기화 체크.** 새 브랜치를 따거나 진행 중인 브랜치에서 다시 작업할 때, 먼저 `git fetch origin && git log --oneline HEAD..origin/main` 으로 따라잡아야 할 커밋이 있는지 확인. 있으면 rebase 한 뒤 시작.
-- **플랜 모드 진입 필수.** 작업 시작 시 `EnterPlanMode` 툴을 호출해 계획을 세우고, `ExitPlanMode` 로 사용자 승인을 받은 뒤 구현. **텍스트로만 계획을 나열하는 것은 플랜 모드가 아니다 — 반드시 툴을 호출.** (사소한 한 줄 수정 등 위험이 거의 없는 변경은 예외.)
+- **플랜 모드 진입 필수.** 어떠한 작업이든 시작 전 반드시 Plan Mode 로 진입해 계획을 세운 뒤 진행한다. 단순 문서 수정, 한 줄 변경, 질문성 조사도 예외 없이 Plan Mode 를 먼저 사용한다.
 - **feature 브랜치에서 작업.** 브랜치 명: `feat/<scope>`, `fix/<scope>`, `chore/<scope>`. **main 에 직접 커밋·푸시 금지.** 변경은 항상 PR.
 - **머지 전 `./gradlew clean build` 그린 확인.**
 - **작업 완료 시 문서 동기화.** 변경이 영향을 주는 문서(`README.md`, `CLAUDE.md`, `docs/TROUBLESHOOTING.md` 등)를 같은 PR 에 함께 업데이트.
