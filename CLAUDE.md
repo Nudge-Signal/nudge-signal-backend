@@ -11,7 +11,7 @@
 
 ## 작업 원칙
 
-- 어떠한 작업이든 시작 전 반드시 Plan Mode 로 진입해 계획을 세운 뒤 진행한다. 단순 문서 수정, 한 줄 변경, 질문성 조사도 예외 없이 Plan Mode 를 먼저 사용한다.
+- 어떠한 작업이든 시작 전 반드시 Plan Mode 로 진입해 계획을 세운 뒤 진행한다. 작업 시작 시 `EnterPlanMode` 툴을 호출해 계획을 세우고, `ExitPlanMode` 로 사용자 승인을 받은 뒤 구현한다. 단순 문서 수정, 한 줄 변경, 질문성 조사도 예외 없이 Plan Mode 를 먼저 사용한다.
 
 - 언어/런타임: Java 17
 - 프레임워크: Spring Boot 3.5.x (Web / Data JPA / Validation / Actuator)
