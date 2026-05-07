@@ -36,3 +36,10 @@
 - 원인: `application.yml` 이 보안 규칙 §3 에 따라 `spring.profiles.active: ${SPRING_PROFILES_ACTIVE}` / `server.port: ${SERVER_PORT}` 를 **fallback 없이** 참조한다. 일반 실행은 환경변수 / GitHub Actions secrets 로 채우지만, `@WebMvcTest` 는 외부 env 를 자동 주입하지 않으므로 placeholder 가 그대로 남아 `ProfilesValidator` 가 거부.
 - 해결: 테스트 클래스에 `@TestPropertySource(properties = {"SPRING_PROFILES_ACTIVE=test", "SERVER_PORT=0"})` 추가. `NudgeSignalBackendApplicationTests` 가 이미 같은 패턴을 쓰고 있어 동일하게 맞춤.
 - 학습/메모: 보안 규칙(§3) 으로 yml 디폴트 금지 → 슬라이스 테스트 추가 시 매번 env 주입 필요. 컨트롤러 / 서비스 슬라이스가 늘어나면 공통 기반 클래스 또는 `@TestPropertySource` 를 모은 메타애노테이션 도입 검토. 통합 테스트(`@SpringBootTest`) 도 동일 문제 — 같은 기준으로 처리.
+
+## 2026-05-07 · [TROUBLE] Java 21 toolchain 전환 후 로컬 빌드 JDK 미감지
+
+- 상황: Gradle toolchain 과 Docker 이미지를 Java 21 로 올린 뒤 `./gradlew clean build` 검증 시 `Cannot find a Java installation ... matching: {languageVersion=21}` 로 실패.
+- 원인: 현재 로컬 머신에 Gradle 이 감지할 수 있는 JDK 21 설치가 없고, Gradle toolchain 다운로드 repository 도 별도로 설정되어 있지 않다.
+- 해결: 프로젝트 설정은 Java 21 로 변경 완료. 로컬 검증은 JDK 21 설치 후 재실행해야 한다.
+- 학습/메모: Java 버전 전환 시 빌드 설정뿐 아니라 개발자 머신 / CI / Docker runtime 의 JDK 버전도 함께 맞춰야 한다.
