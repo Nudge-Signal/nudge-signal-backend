@@ -4,7 +4,7 @@
 
 ## 기술 스택
 
-- Java 17
+- Java 21
 - Spring Boot 3.5.x (Web, Data JPA, Validation, Actuator)
 - PostgreSQL 16
 - Redis 7
@@ -13,7 +13,7 @@
 
 ## 사전 준비
 
-- JDK 17 (Temurin 권장)
+- JDK 21 (Temurin 권장)
 - Docker / Docker Desktop
 - IntelliJ IDEA (권장 IDE)
 
